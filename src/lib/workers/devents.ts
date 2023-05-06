@@ -49,4 +49,5 @@ self.onmessage = (e: MessageEvent<DEventRaw>) => {
   EVENT_PROCESSOR.processRaw(e.data);
 };
 
-export default {};
+const blank = {};
+export default blank;

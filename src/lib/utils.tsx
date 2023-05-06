@@ -37,8 +37,10 @@ function objectId(object: Object): number {
   return res;
 }
 
-export default {
+const vars = {
   arrayDelete,
   arrayReplace,
   objectId,
 };
+
+export default vars;

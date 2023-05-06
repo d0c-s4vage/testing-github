@@ -6,11 +6,12 @@ import styles from './extra_clickable_image.module.css';
 
 
 type ExtraClickableImageProps = {
-  clickHandler: Handler;
+  clickHandler: Handler<void>;
+  alt: string;
 };
 
-export default function ExtraClickableImage({clickHandler, ...imageProps}: ExtraClickableImageProps & ImageProps): React.ReactElement {
+export default function ExtraClickableImage({clickHandler, alt, ...imageProps}: ExtraClickableImageProps & ImageProps): React.ReactElement {
   return <div className={styles.wrapper} onClick={() => clickHandler()}>
-    <Image {...imageProps} />
+    <Image alt={alt} {...imageProps} />
   </div>;
 }

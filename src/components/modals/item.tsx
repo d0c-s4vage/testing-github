@@ -1,5 +1,4 @@
-import React, { useRef, useEffect, useState } from 'react';
-import Body from 'next/body';
+import React, { useRef } from 'react';
 
 import { Item } from '@/models/all';
 import { Handler } from '@/types/handlers';
@@ -14,15 +13,15 @@ export type ItemModalProps = {
 };
 
 export default function ItemModal(props: ItemModalProps): React.ReactElement {
+  let nameEdit = useRef<HTMLInputElement>(null);
+  let descEdit = useRef<HTMLTextAreaElement>(null);
+  let completedEdit = useRef<HTMLInputElement>(null);
+
   if (props.item == null) {
     return <></>;
   }
 
   let item: Item = props.item;
-
-  let nameEdit = useRef<HTMLInputElement>(null);
-  let descEdit = useRef<HTMLTextAreaElement>(null);
-  let completedEdit = useRef<HTMLInputElement>(null);
 
   let handleSave = () => {
     item.name = nameEdit.current?.value || "";

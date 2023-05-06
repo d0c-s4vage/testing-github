@@ -3,7 +3,7 @@ import { KnockItOutState } from '@/models/all';
 
 export let STATE: KnockItOutState | null = null;
 
-interface DBSchema extends DBSchema {
+interface Schema extends DBSchema {
   states: {
     key: string;
     value: {[key: string]: any};
@@ -12,7 +12,7 @@ interface DBSchema extends DBSchema {
 
 async function load(): Promise<KnockItOutState> {
   // TODO full error handling, etc.
-  let db = await openDB<DBSchema>("knock-it-out", 1, {
+  let db = await openDB<Schema>("knock-it-out", 1, {
     upgrade(db) {
       db.createObjectStore("states");
     }
