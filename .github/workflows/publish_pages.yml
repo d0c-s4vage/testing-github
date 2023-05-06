@@ -6,12 +6,8 @@ on:
     #       - 'v*.*.*'
 
 jobs:
-  pages:
+  build:
     runs-on: ubuntu-latest
-
-    permissions:
-      pages: write
-      id-token: write
 
     steps:
       - uses: actions/checkout@v3
@@ -37,16 +33,3 @@ jobs:
             git add .
             git push origin "$branch_name":pages
           )
-
-  deploy:
-    needs: build
-
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-
-    runs-on: ubuntu-latest
-    steps:
-    - name: Deploy pages
-      id: deployment
-      uses: actions/deploy-pages@v1.2.3
