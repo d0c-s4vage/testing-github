@@ -43,6 +43,7 @@ jobs:
             set -x
             branch_name=$(date +%s_%N)
             git checkout --orphan "$branch_name"
+            git rm -rf .
             git add .
             git push origin -f "$branch_name":pages
           )
