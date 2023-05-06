@@ -45,5 +45,6 @@ jobs:
             git checkout --orphan "$branch_name"
             git rm -rf .
             git add .
+            git commit -m "pages update via CI"
             git push origin -f "$branch_name":pages
           )
