@@ -49,8 +49,10 @@ function getSync(): KnockItOutState {
   return STATE;
 }
 
-export default {
+const toExport = {
   get,
   getSync,
   save,
 };
+
+export default toExport;
