@@ -15,6 +15,18 @@ jobs:
         with:
           node-version: 19
 
+      # from https://nextjs.org/docs/pages/building-your-application/deploying/ci-build-caching
+      - uses: actions/cache@v3
+        with:
+          path: |
+            ~/.npm
+            ${{ github.workspace }}/.next/cache
+          # Generate a new cache whenever packages or source files change.
+          key: ${{ runner.os }}-nextjs-${{ hashFiles('**/package-lock.json') }}-${{ hashFiles('**.[jt]s', '**.[jt]sx') }}
+          # If source files changed but packages didn't, rebuild from a prior cache.
+          restore-keys: |
+            ${{ runner.os }}-nextjs-${{ hashFiles('**/package-lock.json') }}-
+
       - name: Install dependencies
         run: |
           yarn install --frozen-lockfile
@@ -28,7 +40,8 @@ jobs:
         run: |
           cp -r .git ./out
           cd out ; (
-            branch_name=$(date +%s.%N)
+            set -x
+            branch_name=$(date +%s_%N)
             git checkout --orphan "$branch_name"
             git add .
             git push origin -f "$branch_name":pages
