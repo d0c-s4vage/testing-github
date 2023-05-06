@@ -1,0 +1,52 @@
+name: Pages
+
+on:
+  push:
+    #     tags:
+    #       - 'v*.*.*'
+
+jobs:
+  pages:
+    runs-on: ubuntu-latest
+
+    permissions:
+      pages: write
+      id-token: write
+
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 19
+
+      - name: Install dependencies
+        run: |
+          yarn install --frozen-lockfile
+
+      - name: Build the site
+        run: |
+          npx next build ./out
+          touch ./out/.nojekyll
+
+      - name: Update pages branch
+        run: |
+          cp -r .git ./out
+          cd out ; (
+            branch_name=$(date +%s.%N)
+            git checkout --orphan "$branch_name"
+            git add .
+            git push origin "$branch_name":pages
+          )
+
+  deploy:
+    needs: build
+
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    runs-on: ubuntu-latest
+    steps:
+    - name: Deploy pages
+      id: deployment
+      uses: actions/deploy-pages@v1.2.3
