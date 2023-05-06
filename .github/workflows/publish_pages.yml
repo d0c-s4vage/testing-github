@@ -2,8 +2,8 @@ name: Pages
 
 on:
   push:
-    #     tags:
-    #       - 'v*.*.*'
+    branches:
+      - new_branch
 
 jobs:
   build:
@@ -19,7 +19,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          yarn install --frozen-lockfile
+          yarn install --frozen-lockfile --prod
 
       - name: Build the site
         run: |
