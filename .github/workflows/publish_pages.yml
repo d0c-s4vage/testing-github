@@ -31,5 +31,5 @@ jobs:
             branch_name=$(date +%s.%N)
             git checkout --orphan "$branch_name"
             git add .
-            git push origin "$branch_name":pages
+            git push origin -f "$branch_name":pages
           )
