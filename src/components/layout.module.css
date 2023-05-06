@@ -1,0 +1,61 @@
+.pageBody {
+    max-width: var(--max-content-width);
+    margin-left: auto;
+    margin-right: auto;
+    min-height: calc(100vh - 2 * var(--nav-height));
+    padding: calc(var(--default-padding-y) * 3) var(--default-padding-x);
+
+    display: flex;
+    flex-direction: column;
+    gap: var(--default-padding-x);
+    justify-content: left;
+    align-items: baseline;
+}
+
+.pageHeader {
+    display: flex;
+    flex-direction: row;
+    background-color: var(--bg-color-3);
+    height: var(--nav-height);
+    align-items: center;
+    font-size: 1.05rem;
+    justify-content: space-between;
+}
+
+.pageHeaderLeft {
+    display: flex;
+    height: 100%;
+    background-color: 
+}
+
+.pageHeaderLeft a {
+    text-decoration: none;
+    height: 100%;
+    background-color: var(--bg-color-4);
+    padding: var(--default-padding);
+}
+
+.pageHeaderLeft a:visited {
+    color: black;
+}
+
+.pageHeaderLeft a:hover {
+    color: var(--main-color-3);
+    background-color: var(--bg-color-2);
+}
+
+.pageHeaderLeft a:active {
+    color: var(--main-color-3);
+    text-shadow: 0px 0px 0.5px var(--main-color-5);
+}
+
+.pageHeaderRight {
+    flex-grow: 0;
+    height: 100%;
+    padding: var(--default-padding);
+}
+
+.pageFooter {
+    height: var(--nav-height);
+    background-color: var(--bg-color-3);
+}

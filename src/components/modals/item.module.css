@@ -1,0 +1,90 @@
+@use "sass:color";
+
+.background {
+    display: none;
+    position: absolute;
+    float: left;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    opacity: 0.8;
+}
+
+.overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1;
+    padding: var(--default-padding);
+    backdrop-filter: blur(3px) brightness(80%);
+}
+
+.container {
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+    max-width: 600px;
+    background-color: var(--bg-color-1);
+    border: 1px solid var(--bg-color-5);
+    box-shadow: var(--shadow-dark-3);
+    background-color: var(--bg-color-3);
+    border-radius: var(--default-border-radius);
+}
+
+.header {
+    padding: var(--default-padding);
+}
+
+.title {
+    text-align: left;
+    font-weight: bold;
+}
+
+.content {
+    display: flex;
+    flex-direction: column;
+    gap: var(--default-padding-x);
+    padding: var(--default-padding);
+    background-color: var(--bg-color-1);
+}
+
+.fieldEdit {
+    display: flex;
+    flex-direction: row;
+    gap: var(--default-padding-x);
+    align-items: center;
+}
+
+.fieldEdit label {
+    flex-grow: 0;
+    width: 80px;
+    text-align: right;
+}
+
+.fieldEdit :not(label) {
+    width: default;
+    min-width: 20px;
+    flex-grow: 1;
+    flex-shrink: 1;
+}
+
+.fieldEdit input[type=checkbox] {
+    flex-grow: 0;
+}
+
+.fieldEdit textarea {
+    height: 75px;
+}
+
+.footer {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    padding: var(--default-padding);
+}

@@ -1,0 +1,42 @@
+.table {
+    table-layout: fixed;
+    width: 100%;
+    box-shadow: var(--shadow-1);
+    border-radius: var(--default-border-radius);
+    background-color: var(--bg-color-1);
+}
+
+.table td, .table th {
+    border: none;
+}
+
+.header {
+    padding: var(--default-padding);
+    margin: 0;
+    font-weight: normal;
+}
+
+.footer {
+}
+
+.body {
+}
+
+.row:nth-child(even) {
+    background-color: var(--main-color-0);
+}
+
+.row:nth-child(odd) {
+    background-color: var(--bg-color-0);
+}
+
+.field {
+    white-space: nowrap;
+    padding: var(--default-padding-small);
+}
+
+.ellipsis {
+    text-overflow: ellipsis;
+    overflow-x: clip;
+    white-space: nowrap;
+}
