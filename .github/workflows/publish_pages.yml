@@ -21,8 +21,8 @@ jobs:
 
       - name: Build the site
         run: |
-          npx next build ./out
-          touch ./out/.nojekyll
+          npx next build
+          touch out/.nojekyll
 
       - name: Update pages branch
         run: |
