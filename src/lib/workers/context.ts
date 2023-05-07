@@ -1,33 +1,59 @@
+import {DEventParsed} from "./types";
+
+type ContextFrame = {
+  event: DEventParsed;
+  data: {[key: string]: any}[];
+};
+
 export default class Context {
   private _shouldSave: boolean;
-  private _level: number;
+  private _eventStack: ContextFrame[];
 
   constructor() {
     this._shouldSave = false;
-    this._level = 0;
+    this._eventStack = [];
   }
 
-  public get level(): number {
-    return this._level;
+  get currFrame(): ContextFrame {
+    if (this._eventStack.length == 0) {
+      throw new Error("Cannot fetch current event, event stack is empty");
+    }
+    return this._eventStack[this._eventStack.length - 1];
   }
 
-  public incLevel() {
-    this._level++;
+  get level(): number {
+    return this._eventStack.length;
   }
 
-  public decLevel() {
-    if (this._level <= 0) {
-      throw new Error("Should not be decrementing the level less than 0");
+  enterEvent(event: DEventParsed) {
+    this._eventStack.push({event, data: {}});
+  }
+
+  pushDataContext() {
+    this.currFrame.data[name] = val;
+    return this;
+  }
+
+  getValue(name: string, val: any): Context {
+  }
+
+  leaveEvent(): DEventParsed {
+    if (this._eventStack.length == 0) {
+      throw new Error("No more events to leave!");
     }
 
-    this._level--;
+    const res = this._eventStack.pop();
+    if (res === undefined) {
+      throw new Error("This should never happen");
+    }
+    return res.event;
   }
 
-  public get shouldSave(): boolean {
+  get shouldSave(): boolean {
     return this._shouldSave;
   }
 
-  public set shouldSave(val: boolean) {
+  set shouldSave(val: boolean) {
     this._shouldSave = val;
   }
 }

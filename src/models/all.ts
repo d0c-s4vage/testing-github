@@ -1,18 +1,12 @@
 import { DEvents, DEventParsed } from '@/lib/workers/types';
 
+import { UuidHaver } from './bases';
+import type { Uuid } from './bases';
+import { Proposition } from './propositions';
+
 export type KnockItOutState = {
   items: Item[];
 };
-
-type Uuid = string;
-
-export class UuidHaver {
-  uuid: Uuid;
-
-  constructor() {
-    this.uuid = crypto.randomUUID();
-  }
-}
 
 export class Item extends UuidHaver {
   name: string;
@@ -27,32 +21,6 @@ export class Item extends UuidHaver {
   }
 };
 
-// need to forward typing all the in as well?
-// AND Clause
-
-/*
-interface Proposition {
-  evaluate(): boolean;
-}
-
-enum PropositionConjunction {
-  AND,
-  OR,
-};
-
-abstract class CompoundProposition implements Proposition {
-  conjunction: PropositionConjunction;
-  items: Proposition[];
-
-  constructor(...items) {
-  }
-
-  evaluate(): boolean {
-    return true;
-  }
-}
-// compoundproposition -> AND, OR
-
 export class DecisionEdge extends UuidHaver {
   fromDecision: Uuid;
   toDecision: Uuid
@@ -65,7 +33,7 @@ export class DecisionEdge extends UuidHaver {
   // forward.
   outputEvents: DEventParsed[];
 
-  constructor(fromDecision: Uuid, toDecision: Uuid, proposition: Proposition, events: DEventParsed[], params: any) {
+  constructor(fromDecision: Uuid, toDecision: Uuid, proposition: Proposition, events: DEventParsed[]) {
     super();
     this.fromDecision = fromDecision;
     this.toDecision = toDecision;
@@ -73,7 +41,6 @@ export class DecisionEdge extends UuidHaver {
     this.outputEvents = events;
   }
 };
-*/
 
 export class Decision extends UuidHaver {
   name: string;
