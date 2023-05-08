@@ -195,8 +195,9 @@ class FieldPtr<T=any> {
   }
 }
 
-function ExtractFields<T=any>(obj: Record<string, any>, filterFn: Handler<T,boolean>, currPath: string[] = []): FieldPtr<T>[] {
+function ExtractFields<T=any>(obj: Record<string, any>, filterFn: Handler<T,boolean>, currPath: string[] = [], origObj?: Record<string, any>): FieldPtr<T>[] {
   const res = [];
+  const _origObj: Record<string, any> = origObj || obj;
 
   for (let prop in obj) {
     if (prop == "__private") {
@@ -205,12 +206,12 @@ function ExtractFields<T=any>(obj: Record<string, any>, filterFn: Handler<T,bool
 
     const val = obj[prop];
     if (filterFn(val)) {
-      res.push(new FieldPtr(obj, [...currPath, prop]));
+      res.push(new FieldPtr(_origObj, [...currPath, prop]));
     }
 
     if (typeof val === "object") {
       currPath.push(prop);
-      ExtractFields(obj, filterFn, currPath);
+      res.push(...ExtractFields(val, filterFn, currPath, _origObj));
       currPath.pop();
     }
   }
@@ -254,11 +255,10 @@ export class RegexProp extends PropBase implements RegexPropData {
   evaluate(ctx: Context): boolean {
     // find all string fields, recursive, in the event, ignoring any
     // subfields of "internal"
-    
     const strFilter = (val: any): boolean => (typeof val == "string");
 
     for (const ptr of ExtractFields<string>(ctx.currFrame.event, strFilter)) {
-      if (ptr.deref().search(this.config.regex) != -1) {
+      if (ptr.deref().search(new RegExp(this.config.regex)) != -1) {
         return true;
       }
     }

@@ -6,7 +6,7 @@ import styles from './data_table.module.css'
 // PROPS
 
 export type HeaderSpec<TDataType> =  {
-  display: string;
+  display: React.ReactNode;
   value: (rowData: TDataType) => React.ReactNode;
   width?: number;
   center?: boolean;

@@ -1,5 +1,5 @@
 :root {
-    --default-font: sans;
+    --default-font: "Roboto", sans;
     --default-padding-x: 1.4rem;
     --default-padding-y: calc(var(--default-padding-x) * 0.7);
     --default-padding: var(--default-padding-y) var(--default-padding-x);
@@ -41,6 +41,7 @@
     --main-color-4: #062fcf;
     --main-color-5: #090e9e;
 
+    --green-color-1: #48b798;
     --success-color-1: #5d79df;
     --error-color-1: #b55d5d;
 
@@ -137,8 +138,22 @@ table {
     text-align: center;
 }
 
+.errorBtn,
+.greenBtn,
+.successBtn {
+    height: 30px;
+    line-height: 10px;
+    max-height: 30px;
+}
+
 .errorBtn {
     background-color: var(--error-color-1);
+    color: white;
+    flex-grow: 0;
+}
+
+.greenBtn {
+    background-color: var(--green-color-1);
     color: white;
     flex-grow: 0;
 }

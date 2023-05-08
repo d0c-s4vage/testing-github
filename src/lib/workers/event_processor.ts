@@ -31,6 +31,12 @@ export class EventProcessor {
     this.log(`processing event: ${event.category}:${event.action}`);
 
     for (const decision of this.decisionTrees) {
+      if (!decision.canEvaluate(ctx)) {
+        continue;
+      }
+
+      console.log(`Processing decision tree: ${decision.name}`);
+
       for (const newEvent of decision.evaluate(ctx)) {
         if (newEvent.type == DEvents.None) { continue; }
 

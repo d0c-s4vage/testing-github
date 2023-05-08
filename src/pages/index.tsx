@@ -91,6 +91,13 @@ export default function Home() {
   }
   const newItem = () => setModalState({ item: new Item(), isNew: true });
   const hideModal = () => setModalState({ item: null, isNew: false });
+  const newRandomItem = () => {
+    stateMutator?.newItem(new Item(
+      "random Item",
+      "Random description",
+      false,
+    ));
+  };
 
   const headers = makeTableHeaders({
     state,
@@ -106,18 +113,25 @@ export default function Home() {
       Hello! you have {state.items?.length} items in the list
     </div>
 
-    <DataTable<Item>
-      data={items}
-      headers={headers}
-      keyFn={(item) => item.uuid + "-" + utils.objectId(item)}
-    />
+    <div className={styles.tableContainer}>
+      <DataTable<Item>
+        data={items}
+        headers={headers}
+        keyFn={(item) => item.uuid + "-" + utils.objectId(item)}
+      />
 
-    <div className={styles.buttonRow}>
-      <button
-        onClick={()=> newItem()}
-        className={"successBtn"}
-      >Add Item</button>
+      <div className={styles.buttonRow}>
+        <button
+          onClick={()=> newRandomItem()}
+          className={"greenBtn"}
+        >Random</button>
+        <button
+          onClick={()=> newItem()}
+          className={`successBtn ${styles.addBtn}`}
+        >＋</button>
+      </div>
     </div>
+
 
     <ItemModal
       title={modalState.isNew ? "Add a new item" : "Edit the item"}

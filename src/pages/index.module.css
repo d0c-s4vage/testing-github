@@ -1,8 +1,24 @@
 .greeting {}
 
+.tableContainer {
+    position: relative;
+}
+
 .buttonRow {
+    position: absolute;
+    top: 0;
+    right: 0;
     width: 100%;
     display: flex;
-    flex-direction: column;
-    align-items: flex-end;
+    flex-direction: row;
+    justify-content: right;
+    margin-top: 5px;
+    margin-right: 5px;
+}
+
+.addBtn {
+    font-size: 1.3rem;
+    font-weight: bold;
+    line-height: 15px;
+    padding: 5px 10px;
 }
