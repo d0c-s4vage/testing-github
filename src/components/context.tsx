@@ -1,8 +1,7 @@
 import { createContext } from 'react';
 
-import { DEvents, DItemEvent, DDecisionEvent } from '@/lib/workers/types';
-import { KnockItOutState, Item, Decision } from '@/models/all';
-
+import { DItemDeleteEvent, DItemEditEvent, DItemNewEvent } from '@/lib/workers/types';
+import { KnockItOutState, Item } from '@/models/all';
 
 export class StateMutator {
   worker: Worker;
@@ -12,15 +11,15 @@ export class StateMutator {
   }
 
   deleteItem(item: Item) {
-    this.worker.postMessage(new DItemEvent(DEvents.ItemDelete, item));
+    this.worker.postMessage(new DItemDeleteEvent(item.uuid));
   }
 
   editItem(item: Item) {
-    this.worker.postMessage(new DItemEvent(DEvents.ItemEdit, item));
+    this.worker.postMessage(new DItemEditEvent(item));
   }
 
   newItem(item: Item) {
-    this.worker.postMessage(new DItemEvent(DEvents.ItemNew, item));
+    this.worker.postMessage(new DItemNewEvent(item));
   }
 }
 
@@ -30,5 +29,5 @@ export type AppContextType = {
 };
 
 export const AppContext = createContext<AppContextType>({
-  state: { items: [] },
+  state: new KnockItOutState(),
 });

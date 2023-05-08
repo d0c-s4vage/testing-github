@@ -1,21 +1,19 @@
 import Context from './context';
-import { Item, Decision, KnockItOutState } from '@/models/all';
-import { DEvents, DEventRaw, DItemEvent, DDecisionEvent, DStateEvent, DEventParsed } from './types';
+import { Item, KnockItOutState, DecisionTree } from '@/models/all';
+import { DEventRaw, DEventBase, DStateReloadEvent, DEvents, DItemNewEvent, DItemEditEvent, DItemDeleteEvent, DDecisionNewEvent, DDecisionEditEvent, DDecisionDeleteEvent, DStateFetchEvent } from './types';
 import state from './state';
 
-export type EventHandlers = {
-  itemHandler?: (event: DItemEvent, ctx: Context) => DEventParsed[];
-  stateHandler?: (event: DStateEvent, ctx: Context) => DEventParsed[];
-  decisionHandler?: (event: DDecisionEvent, ctx: Context) => DEventParsed[];
-};
-
 export class EventProcessor {
-  handlers: EventHandlers;
   canSave: boolean;
+  decisionTrees: DecisionTree<Extract<DEvents, DEvents>, Extract<DEvents, DEvents>>[];
 
-  constructor(handlers: EventHandlers, canSave: boolean = true) {
-    this.handlers = handlers;
+  constructor(canSave: boolean = true) {
     this.canSave = canSave;
+    this.decisionTrees = [];
+  }
+
+  addDecisionTree(decisionTree: DecisionTree<Extract<DEvents, DEvents>, Extract<DEvents, DEvents>>) {
+    this.decisionTrees.push(decisionTree);
   }
 
   private log(msg: string) {
@@ -26,57 +24,53 @@ export class EventProcessor {
     );
   }
 
-  process(event: DItemEvent | DStateEvent | DDecisionEvent, _ctx: Context | null = null) {
+  process<E extends DEventBase<Extract<DEvents, DEvents>>>(event: E, _ctx: Context | null = null) {
     let ctx = _ctx || new Context();
-    ctx.incLevel();
 
+    ctx.enterEvent(event);
     this.log(`processing event: ${event.category}:${event.action}`);
 
-    switch (event.category) {
-      case "item":
-        if (!this.handlers.itemHandler) { return; }
-        this.handlers.itemHandler(event as DItemEvent, ctx);
-        break;
-      case "state":
-        if (!this.handlers.stateHandler) { return; }
-        this.handlers.stateHandler(event as DStateEvent, ctx);
-        break;
-      case "decision":
-        if (!this.handlers.decisionHandler) { return; }
-        this.handlers.decisionHandler(event as DDecisionEvent, ctx);
-        break;
-      default:
-        throw new Error(`Unsupported event category ${event.category}`);
+    for (const decision of this.decisionTrees) {
+      for (const newEvent of decision.evaluate(ctx)) {
+        if (newEvent.type == DEvents.None) { continue; }
+
+        this.process(newEvent, ctx);
+      }
     }
 
-    ctx.decLevel();
+    ctx.leaveEvent();
 
     if (ctx.level == 0 && this.canSave && ctx.shouldSave) {
       state.save().then(() => {
         state.get().then((stateVal) => {
-          self.postMessage(new DStateEvent(DEvents.StateReload, stateVal));
+          self.postMessage(new DStateReloadEvent(stateVal));
         });
       });
     }
   }
 
   processRaw(rawEvent: DEventRaw) {
-    this.log("processing raw event: " + JSON.stringify(rawEvent));
-    switch (rawEvent.category) {
-      case "item":
-        const itemEvent = new DItemEvent(rawEvent.type, rawEvent.data as Item);
-        this.process(itemEvent);
-        break;
-      case "decision":
-        const decisionEvent = new DDecisionEvent(rawEvent.type, rawEvent.data as Decision);
-        this.process(decisionEvent);
-        break;
-      case "state":
-        const stateEvent = new DStateEvent(rawEvent.type, rawEvent.data as (KnockItOutState | null));
-        this.process(stateEvent);
-        break;
-      default:
-        throw new Error(`Unsupported raw event category ${rawEvent.category}`);
+    const map: { [key in DEvents]: (e: DEventRaw) => DEventBase<Extract<DEvents, DEvents>> | null } = {
+      [DEvents.None]: (e) => null,
+      [DEvents.ItemNew]: (e) => new DItemNewEvent(e.data as Item),
+      [DEvents.ItemEdit]: (e) => new DItemEditEvent(e.data as Item),
+      [DEvents.ItemDelete]: (e) => new DItemDeleteEvent(e.data.uuid),
+      [DEvents.DecisionNew]: (e) => new DDecisionNewEvent(e.data as DecisionTree<Extract<DEvents, DEvents>, Extract<DEvents, DEvents>>),
+      [DEvents.DecisionEdit]: (e) => new DDecisionEditEvent(e.data as DecisionTree<Extract<DEvents, DEvents>, Extract<DEvents, DEvents>>),
+      [DEvents.DecisionDelete]: (e) => new DDecisionDeleteEvent(e.data.uuid),
+      [DEvents.StateFetch]: (_) => new DStateFetchEvent(),
+      [DEvents.StateReload]: (e) => new DStateReloadEvent(e.data as KnockItOutState),
+    };
+
+    if (!(rawEvent.type in map)) {
+      throw new Error(`Unsupported raw event category ${rawEvent.category}`);
     }
+
+    let converted = map[rawEvent.type](rawEvent);
+    if (!converted) {
+      return;
+    }
+
+    this.process(converted);
   }
 }

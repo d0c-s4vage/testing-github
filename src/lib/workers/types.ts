@@ -1,6 +1,9 @@
-import { Item, Decision, KnockItOutState } from '@/models/all';
+import { Item, KnockItOutState, DecisionTree, DecisionTreeData, ItemData, KnockItOutStateData } from '@/models/all';
+import {Uuid} from '@/models/bases';
 
 export enum DEvents {
+  None = "none",
+
   ItemNew = "item:new",
   ItemDelete = "item:delete",
   ItemEdit = "item:edit",
@@ -26,40 +29,94 @@ export class DEventRaw {
   }
 };
 
-export abstract class DEventParsed {
-  type: DEvents;
+export abstract class DEventBase<EventType extends DEvents> {
+  type: EventType;
   category: string;
   action: string;
 
-  constructor(type: DEvents) {
+  constructor(type: EventType) {
     [this.category, this.action] = type.split(":", 2);
     this.type = type;
   }
 };
 
-export class DItemEvent extends DEventParsed {
-  data: Item;
+export class DNoneEvent extends DEventBase<DEvents.None> {
+  constructor() {
+    super(DEvents.None);
+  }
+}
 
-  constructor(type: DEvents, item: Item) {
-    super(type);
+export class DItemNewEvent extends DEventBase<DEvents.ItemNew> {
+  data: ItemData;
+
+  constructor(item: Item) {
+    super(DEvents.ItemNew);
     this.data = item;
   }
 };
 
-export class DDecisionEvent extends DEventParsed {
-  data: Decision;
+export class DItemEditEvent extends DEventBase<DEvents.ItemEdit> {
+  data: ItemData;
 
-  constructor(type: DEvents, decision: Decision) {
-    super(type);
+  constructor(item: Item) {
+    super(DEvents.ItemEdit);
+    this.data = item;
+  }
+};
+
+export class DItemDeleteEvent extends DEventBase<DEvents.ItemDelete> {
+  data: {uuid: string};
+
+  constructor(uuid: Uuid) {
+    super(DEvents.ItemDelete);
+    this.data = { uuid };
+  }
+};
+
+// ------------------------
+
+export class DDecisionNewEvent extends DEventBase<DEvents.DecisionNew> {
+  data: DecisionTreeData;
+
+  constructor(decision: DecisionTree<Extract<DEvents,DEvents>,Extract<DEvents,DEvents>>) {
+    super(DEvents.DecisionNew);
     this.data = decision;
   }
 };
 
-export class DStateEvent extends DEventParsed {
-  data: KnockItOutState | null;
+export class DDecisionEditEvent extends DEventBase<DEvents.DecisionEdit> {
+  data: DecisionTreeData;
 
-  constructor(type: DEvents, state: KnockItOutState | null = null) {
-    super(type);
+  constructor(decision: DecisionTree<Extract<DEvents,DEvents>,Extract<DEvents,DEvents>>) {
+    super(DEvents.DecisionEdit);
+    this.data = decision;
+  }
+};
+
+export class DDecisionDeleteEvent extends DEventBase<DEvents.DecisionDelete> {
+  data: Uuid;
+
+  constructor(uuid: Uuid) {
+    super(DEvents.DecisionDelete);
+    this.data = uuid;
+  }
+};
+
+// ------------------------
+
+export class DStateFetchEvent extends DEventBase<DEvents.StateFetch> {
+  data: undefined;
+
+  constructor() {
+    super(DEvents.StateFetch);
+  }
+};
+
+export class DStateReloadEvent extends DEventBase<DEvents.StateReload> {
+  data: KnockItOutStateData;
+
+  constructor(state: KnockItOutState) {
+    super(DEvents.StateReload);
     this.data = state;
   }
 };

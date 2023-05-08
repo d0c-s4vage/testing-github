@@ -4,44 +4,61 @@ import Head from 'next/head';
 
 import { useState, useEffect } from 'react';
 
-import { KnockItOutState } from '@/models/all';
+import { DecisionTree, EventEdge, KnockItOutState } from '@/models/all';
 import { StateMutator, AppContext } from '@/components/context';
 import { PageHeader, PageFooter, PageBody } from '@/components/layout';
 
-import { DEventRaw, DStateEvent, DEvents } from '@/lib/workers/types';
-import type { EventHandlers } from '@/lib/workers/event_processor';
+import { DEventBase, DEventRaw, DEvents, DStateFetchEvent, DStateReloadEvent } from '@/lib/workers/types';
 import { EventProcessor } from '@/lib/workers/event_processor';
+import { CallbackAction } from '@/models/actions';
+import {TrueProp} from '@/models/propositions';
 
+type Handlers = {
+  stateReload: (e: DEventBase<DEvents.StateReload>) => void,
+};
 
-function handleWorkerMessage(
+function handleWorkerMessages(
   event: MessageEvent<DEventRaw>,
-  setState: (state: KnockItOutState) => void
+  handlers: Handlers,
 ) {
-  const handlers: EventHandlers = {
-    stateHandler: (event, _) => {
-      if (event.action == "reload" && event.data !== null) {
-        setState({...event.data});
-      }
-      return [];
-    },
-  };
-  const eventProcessor = new EventProcessor(handlers, false);
+  const eventProcessor = new EventProcessor(false);
+  eventProcessor.addDecisionTree(
+    new DecisionTree<DEvents.StateReload, DEvents.None>({
+      name: "[APP:Builtin] Load State",
+      description: "",
+      edges: [
+        new EventEdge(
+          new TrueProp(),
+          new CallbackAction(
+            DEvents.StateReload,
+            handlers.stateReload,
+          ),
+        )
+      ],
+    })
+  );
 
   eventProcessor.processRaw(event.data);
 }
 
 
 export default function App({ Component, pageProps }: AppProps) {
-  const [state, setState] = useState<KnockItOutState>({items: []});
+  const [state, setState] = useState<KnockItOutState>(new KnockItOutState());
   const [dEventWorker, setDEventWorker] = useState<Worker>();
 
   // load once from local storage initially
   useEffect(() => {
     const worker = new Worker(new URL("../lib/workers/devents", import.meta.url));
     worker.onmessage = (event: MessageEvent<DEventRaw>) => {
-      handleWorkerMessage(event, setState);
+      handleWorkerMessages(event, {
+        stateReload: (e) => {
+          let event = e as DStateReloadEvent;
+          if (event.data == null) { return; }
+          setState(KnockItOutState.fromObj(event.data));
+        }
+      });
     };
-    worker.postMessage(new DStateEvent(DEvents.StateFetch));
+    worker.postMessage(new DStateFetchEvent());
     setDEventWorker(worker);
   }, []);
 
