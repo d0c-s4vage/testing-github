@@ -86,7 +86,9 @@ export default function Home() {
 
   // NOTE: we edit a *copy* of the item and then replace the real one in the state
   // once the user clicks save! See "onSave" below
-  const editItem = (item: Item) => setModalState({ item: { ...item }, isNew: false });
+  const editItem = (item: Item) => {
+    setModalState({ item: Item.fromObj(item.toObj()), isNew: false });
+  }
   const newItem = () => setModalState({ item: new Item(), isNew: true });
   const hideModal = () => setModalState({ item: null, isNew: false });
 
@@ -125,7 +127,6 @@ export default function Home() {
           stateMutator?.newItem(item);
         } else {
           stateMutator?.editItem(item);
-          //utils.arrayReplace(state.items, (x) => x.uuid == item.uuid, item);
         }
         hideModal();
       }}

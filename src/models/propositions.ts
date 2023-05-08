@@ -1,18 +1,44 @@
-import type { Uuid } from './bases';
-import { UuidHaver } from './bases';
 import Context from '@/lib/workers/context'
 import {Handler} from '@/types/handlers';
+import {Item} from './all';
 
 // need to forward typing all the in as well?
 // AND Clause
 
-export interface Proposition {
-  uuid: Uuid;
-  name: string;
-  publicFields: string[];
+export enum PropositionType {
+  Compound = "compound",
+  True = "true",
+  Regex = "regex",
+};
+
+export interface PropositionData {
+  type: PropositionType;
+  config: Record<string, any>,
+}
+
+export interface Proposition extends PropositionData {
+  type: PropositionType;
+  config: Record<string, any>;
 
   canEvaluate(ctx: Context): boolean;
   evaluate(ctx: Context): boolean;
+
+  toObj(): PropositionData;
+  // static fromObj as well!
+}
+
+export function LoadProposition(data: PropositionData) {
+  const map: {[key in PropositionType]: (d: any) => Proposition} = {
+    [PropositionType.Compound]: (d: CompoundPropData) => CompoundProp.fromObj(d),
+    [PropositionType.Regex]: (d: RegexPropData) => RegexProp.fromObj(d),
+    [PropositionType.True]: (d: TruePropData) => TrueProp.fromObj(d),
+  };
+
+  if (!(data.type in map)) {
+    throw new Error(`Unexpecated proposition type ${data.type}`);
+  }
+
+  return map[data.type](data);
 }
 
 enum Conjunction {
@@ -20,37 +46,97 @@ enum Conjunction {
   OR = "OR",
 };
 
-type OwnFields<T> = (keyof T & string)[];
-
-export abstract class PropBase<PropType> extends UuidHaver implements Proposition {
-  abstract name: string;
+export abstract class PropBase implements Proposition {
+  abstract type: PropositionType;
   abstract evaluate(ctx: Context): boolean;
   abstract canEvaluate(ctx: Context): boolean;
-  abstract publicFields: OwnFields<PropType>;
+  abstract config: Record<string, any>;
+  abstract toObj(): PropositionData;
 }
 
-export class CompoundProposition extends PropBase<CompoundProposition> {
-  conjunction: Conjunction;
-  propositions: Proposition[];
-  publicFields: OwnFields<CompoundProposition> = ["propositions"];
+// ----------------------------------------------------------------------------
 
-  constructor(conjunction: Conjunction, ...propositions:Proposition[]) {
+export interface TruePropConfig {}
+export interface TruePropData extends PropositionData {
+  type: PropositionType.True;
+  config: TruePropConfig;
+};
+export class TrueProp extends PropBase {
+  type: PropositionType = PropositionType.True;
+  config: TruePropConfig;
+
+  constructor(config: TruePropConfig = {}) {
     super();
-    this.conjunction = conjunction;
-    this.propositions = propositions;
+    this.config = config;
   }
 
-  get name(): string { return this.conjunction; }
+  canEvaluate(_ctx: Context): boolean { return true; }
+  evaluate(_ctx: Context): boolean { return true; }
+
+  toObj(): TruePropData {
+    return {
+      type: PropositionType.True,
+      config: {...this.config},
+    };
+  }
+
+  static fromObj(data: TruePropData): TrueProp {
+    return new TrueProp(data.config);
+  }
+};
+
+// ----------------------------------------------------------------------------
+
+export interface CompoundPropConfig {
+  propositions: Proposition[];
+};
+export interface CompoundPropData extends PropositionData {
+  type: PropositionType.Compound,
+  conjunction: Conjunction,
+  config: {
+    propositions: PropositionData[],
+  }
+};
+
+export class CompoundProp extends PropBase implements CompoundPropData {
+  type: PropositionType.Compound = PropositionType.Compound;
+  conjunction: Conjunction;
+  config: CompoundPropConfig;
+
+  constructor(conjunction: Conjunction, config: CompoundPropConfig) {
+    super();
+    this.conjunction = conjunction;
+    this.config = config;
+  }
+
+  toObj(): CompoundPropData {
+    return {
+      type: PropositionType.Compound,
+      conjunction: this.conjunction,
+      config: {
+        propositions: this.config.propositions.map((p) => p.toObj()),
+      }
+    };
+  }
+
+  static fromObj(data: CompoundPropData): CompoundProp {
+    return new CompoundProp(
+      data.conjunction,
+      {
+        propositions: data.config.propositions.map((p) => LoadProposition(p)),
+      }
+    );
+  }
 
   addProposition(prop: Proposition) {
-    this.propositions.push(prop);
+    this.config.propositions.push(prop);
   }
 
   isOr(): boolean { return this.conjunction == Conjunction.OR }; 
   isAnd(): boolean { return this.conjunction == Conjunction.AND }; 
 
   canEvaluate(ctx: Context): boolean {
-    for (const prop of this.propositions) {
+    for (const prop of this.config.propositions) {
       if (!prop.canEvaluate(ctx)) {
         return false;
       }
@@ -59,7 +145,7 @@ export class CompoundProposition extends PropBase<CompoundProposition> {
   }
 
   evaluate(ctx: Context): boolean {
-    for (const prop of this.propositions) {
+    for (const prop of this.config.propositions) {
       const val = prop.evaluate(ctx);
       if (val && this.isOr()) {
         return true;
@@ -135,17 +221,35 @@ function ExtractFields<T=any>(obj: Record<string, any>, filterFn: Handler<T,bool
 // ----------------------------------------------------------------------------
 // PROPOSITION IMPLEMENTATIONS
 
-export class PropRegex extends PropBase<PropRegex> {
-  name: string = "Regex";
+export interface RegexPropConfig {
   regex: string;
-  publicFields: OwnFields<PropRegex> = ["regex"];
+};
+export interface RegexPropData extends PropositionData {
+  type: PropositionType.Regex,
+  config: RegexPropConfig,
+};
 
-  constructor(regex: string) {
+export class RegexProp extends PropBase implements RegexPropData {
+  type: PropositionType.Regex = PropositionType.Regex;
+  config: RegexPropConfig;
+
+  constructor(config: RegexPropConfig) {
     super();
-    this.regex = regex;
+    this.config = config;
   }
 
   canEvaluate(_: Context): boolean { return true; }
+
+  toObj(): RegexPropData {
+    return {
+      type: this.type,
+      config: {...this.config},
+    };
+  }
+
+  static fromObj(obj: RegexPropData): RegexProp {
+    return new RegexProp({...obj.config});
+  }
 
   evaluate(ctx: Context): boolean {
     // find all string fields, recursive, in the event, ignoring any
@@ -154,7 +258,7 @@ export class PropRegex extends PropBase<PropRegex> {
     const strFilter = (val: any): boolean => (typeof val == "string");
 
     for (const ptr of ExtractFields<string>(ctx.currFrame.event, strFilter)) {
-      if (ptr.deref().search(this.regex) != -1) {
+      if (ptr.deref().search(this.config.regex) != -1) {
         return true;
       }
     }

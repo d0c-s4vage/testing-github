@@ -21,7 +21,8 @@ async function load(): Promise<KnockItOutState> {
   const res = {
     items: state?.items || [],
   };
-  return res;
+
+  return KnockItOutState.fromObj(res);
 }
 
 async function save() {

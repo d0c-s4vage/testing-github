@@ -1,7 +1,7 @@
-import {DEventParsed} from "./types";
+import {DEventBase} from "./types";
 
 type ContextFrame = {
-  event: DEventParsed;
+  event: any,
   data: {[key: string]: any}[];
 };
 
@@ -12,6 +12,10 @@ export default class Context {
   constructor() {
     this._shouldSave = false;
     this._eventStack = [];
+  }
+
+  get currEvent() {
+    return this.currFrame.event;
   }
 
   get currFrame(): ContextFrame {
@@ -25,19 +29,20 @@ export default class Context {
     return this._eventStack.length;
   }
 
-  enterEvent(event: DEventParsed) {
-    this._eventStack.push({event, data: {}});
+  enterEvent(event: DEventBase<any>) {
+    this._eventStack.push({event, data: []});
   }
 
-  pushDataContext() {
-    this.currFrame.data[name] = val;
+  pushDataContext(data: {[key: string]: any}) {
+    this.currFrame.data.push(data);
     return this;
   }
 
-  getValue(name: string, val: any): Context {
+  getDataContextValue(name: string, val: any): any {
+    // TODO
   }
 
-  leaveEvent(): DEventParsed {
+  leaveEvent() {
     if (this._eventStack.length == 0) {
       throw new Error("No more events to leave!");
     }
@@ -46,7 +51,6 @@ export default class Context {
     if (res === undefined) {
       throw new Error("This should never happen");
     }
-    return res.event;
   }
 
   get shouldSave(): boolean {
