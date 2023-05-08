@@ -2,11 +2,12 @@ import {DEventBase, DEvents, DItemDeleteEvent, DItemEditEvent, DItemNewEvent, DN
 import Context from '@/lib/workers/context';
 import state from '@/lib/workers/state';
 import utils from '@/lib/utils';
-import {Item} from "./all";
+import {Item, ItemData} from "./all";
 
 export enum Actions {
   Callback = "callback",
   ItemSave = "item_save",
+  ItemNew = "item_new",
   StateFetch = "state_fetch",
 };
 
@@ -38,6 +39,11 @@ export function LoadAction(data: ActionData) {
     [Actions.Callback]: (_: any) => {
       throw new Error("Shouldn't be serializing callback actions!!");
     },
+    [Actions.ItemNew]: (d: ItemNewAction) => {
+      const res = Object.create(ItemNewAction);
+      Object.assign(res, d);
+      return res;
+    }
   };
 
   if (!(data.type in map)) {
@@ -101,6 +107,23 @@ export class ItemSaveAction extends Action<typeof ITEM_SAVE_INPUTS[number], DEve
         break;
     }
     return new DNoneEvent();
+  }
+}
+
+export class ItemNewAction extends Action<Extract<DEvents, DEvents>, DEvents.ItemNew> {
+  type: Actions = Actions.ItemNew;
+  shouldPropagate = false;
+  supportedEvents = Object.values(DEvents);
+  itemData: ItemData;
+
+  constructor(itemData: ItemData) {
+    super();
+    this.itemData = itemData;
+  }
+
+  run(_event: DEventBase<Extract<DEvents, DEvents>>, _ctx: Context): DItemNewEvent {
+    const newItem = Item.fromObj(this.itemData);
+    return new DItemNewEvent(newItem);
   }
 }
 

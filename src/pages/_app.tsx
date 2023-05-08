@@ -1,6 +1,7 @@
 import '@/styles/globals.css'
 import type { AppProps } from 'next/app'
 import Head from 'next/head';
+import { Roboto } from 'next/font/google';
 
 import { useState, useEffect } from 'react';
 
@@ -12,6 +13,8 @@ import { DEventBase, DEventRaw, DEvents, DStateFetchEvent, DStateReloadEvent } f
 import { EventProcessor } from '@/lib/workers/event_processor';
 import { CallbackAction } from '@/models/actions';
 import {TrueProp} from '@/models/propositions';
+
+const roboto = Roboto({ subsets: ['latin'], weight: '400' });
 
 type Handlers = {
   stateReload: (e: DEventBase<DEvents.StateReload>) => void,
@@ -26,6 +29,7 @@ function handleWorkerMessages(
     new DecisionTree<DEvents.StateReload, DEvents.None>({
       name: "[APP:Builtin] Load State",
       description: "",
+      events: [DEvents.StateReload],
       edges: [
         new EventEdge(
           new TrueProp(),
@@ -69,10 +73,12 @@ export default function App({ Component, pageProps }: AppProps) {
       <link rel="preconnect" href="https://fonts.googleapis.com" />
       <link rel="preconnect" href="https://fonts.gstatic.com"/>
     </Head>
-    <PageHeader/>
-    <PageBody>
-      <Component {...pageProps} />
-    </PageBody>
-    <PageFooter />
+    <div className={roboto.className}>
+      <PageHeader/>
+      <PageBody>
+        <Component {...pageProps} />
+      </PageBody>
+      <PageFooter />
+    </div>
   </AppContext.Provider>;
 }
